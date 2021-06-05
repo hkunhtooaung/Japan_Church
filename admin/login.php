@@ -53,23 +53,33 @@ if ($_POST) {
 		.container {
 			margin-top: 120px; 
 			width: 30%;
+			background-color: #f4f6f9;
+			height: 300px;
+			border-radius: 10px;
+		}
+		.btn {
+			margin-bottom: 100px;
+		}
+		.f-header {
+			margin-bottom: 20px;
+			margin-top: 20px;
 		}
 	</style>
 </head>
 <body>
 	<div class="container">
-		<h1 align="center">Admin Login</h1>
+		<h1 align="center" class="f-header">Admin Login</h1>
 		<form action="" method="POST">
 		  	<!-- Email input -->
 		  	<div class="form-outline mb-4">
+		  		<label class="form-label" for="form1Example1">Username</label>
 		    	<input type="text" name="name" id="form1Example1" class="form-control" required />
-		    	<label class="form-label" for="form1Example1">Email address</label>
 		  	</div>
 
 		 	<!-- Password input -->
 		  	<div class="form-outline mb-4">
+		  		<label class="form-label" for="form1Example2">Password</label>
 		    	<input type="password" name="pwd" id="form1Example2" class="form-control" required/>
-		    	<label class="form-label" for="form1Example2">Password</label>
 		  	</div>
 
 		  <!-- Submit button -->

@@ -1,9 +1,53 @@
 <?php 
 require 'config/config.php';
-$stmt = $pdo->prepare("SELECT * FROM news ORDER BY id DESC");
-$stmt->execute();
-$result = $stmt->fetchAll();
-?>
+
+  if (!empty($_GET['pageno'])) {
+    $pageno = $_GET['pageno'];
+  } else {
+    $pageno = 1;
+  }
+
+  $numOfrecs = 4;
+  $offset = ($pageno - 1) * $numOfrecs;
+
+if ($_POST['search']) {
+    setcookie('search', $_POST['search'], time() + (86400 * 30), "/");
+
+} else {
+    if (empty($_GET['pageno'])) {
+        unset($_COOKIE['search']);
+        setcookie('search', null, -1, '/');
+    }
+}
+
+  if (empty($_POST['search'])) {
+
+    $stmt = $pdo->prepare("SELECT * FROM news ORDER BY id DESC");
+    $stmt->execute();
+    $rawresult = $stmt->fetchAll();
+    $total_pages = ceil(count($rawresult)/ $numOfrecs);
+
+    $stmt = $pdo->prepare("SELECT * FROM news ORDER BY id DESC LIMIT $offset,$numOfrecs");
+    $stmt->execute();
+    $result = $stmt->fetchAll();
+
+  } else {
+
+    $searchKey = $_POST['search'] ? $_POST['search'] : $_COOKIE['search'];
+    $stmt = $pdo->prepare("SELECT * FROM news WHERE title LIKE '%$searchKey%' ORDER BY id DESC");
+    $stmt->execute();
+    $rawresult = $stmt->fetchAll();
+    $total_pages = ceil(count($rawresult)/ $numOfrecs);
+
+    $stmt = $pdo->prepare("SELECT * FROM news WHERE title LIKE '%$searchKey%' ORDER BY id DESC LIMIT $offset,$numOfrecs");
+    $stmt->execute();
+    $result = $stmt->fetchAll();
+
+  }
+
+
+
+      ?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -25,12 +69,22 @@ $result = $stmt->fetchAll();
     <link rel="stylesheet" href="css/mdb.min.css">
     <!-- Your custom styles (optional) -->
     <style type="text/css">
-
+        .mb-4, .my-4 {
+            text-align: left !important;
+        }
+        .search-form {
+            width: 300px;
+            margin-top: 80px;
+            float: right;
+        }
+        .row {
+            clear: both;
+        }
     </style>
 </head>
 <body>
 	<!-- header start -->
-	<section>
+	<section style="margin-top: 100px;">
 		<div class="container-fluid">
 		<button onclick="topFunction()" id="myBtn" title="Go to top"><i class="arrow up"></i></button>
         
@@ -47,19 +101,19 @@ $result = $stmt->fetchAll();
 				  	<div class="collapse navbar-collapse" id="navbarNavDropdown">
 				    	<ul class="navbar-nav ml-auto">
 				      		<li class="nav-item">
-				        		<a class="nav-link" href="index.html">Home</a>
+				        		<a class="nav-link" href="index.php">Home</a>
 				      		</li>
 				      		<li class="nav-item">
-				        		<a class="nav-link" href="aboutus.html">About us</a>
+				        		<a class="nav-link" href="aboutus.php">About us</a>
 				      		</li>
 				      		<li class="nav-item active">
-				        		<a class="nav-link" href="news.html">News</a>
+				        		<a class="nav-link" href="news.php">News</a>
 				      		</li>
 				      		<li class="nav-item">
-				        		<a class="nav-link" href="video.html">Video</a>
+				        		<a class="nav-link" href="video.php">Video</a>
 				      		</li>
 				      		<li class="nav-item">
-				        		<a class="nav-link" href="contact.html">Contact</a>
+				        		<a class="nav-link" href="contact.php">Contact</a>
 				      		</li>
 				    	</ul>
 				  	</div>
@@ -79,20 +133,27 @@ $result = $stmt->fetchAll();
     <main class="mt-3">
         <!--Main container-->
         <div class="container">
-
-            <div class="row">
+            <div class="search-form">
+                <form id="search-form" action="" method="post">
+                    <input type="hidden" name="_token" value="<?php echo $_SESSION['_token']; ?>">
+                    <div class="form-group md-form">
+                        <label for="name" class=""><span style="float: right;"><i class="fa fa-search">Search</i></span></label>
+                        <input type="text" name="search" class="form-control">
+                    </div>
+                </form>
+            </div>
+            <div class="row mb-5">
                 <div class="col-lg-12 col-md-12 mb-12">
-                    <div style="height: 60px;"></div>
-                    <h2 class="h2-responsive font-weight-bold text-center my-4">News</h2>
+                    <h1 class="h1-responsive font-weight-bold my-4">News</h1>
                 </div>
                 
             </div>
 
             <!-- News Row-->
-            <div class="row">
+            <div class="row" style="text-align: left !important">
 
               <!-- Content column-->
-              <div class="col-md-12 mb-4">
+              <div class="col-md-10 mb-4" style="margin: auto;">
 
                 <section class="section extra-margins pb-3 text-center text-lg-left">
 
@@ -101,10 +162,10 @@ $result = $stmt->fetchAll();
                         <?php 
                         foreach ($result as $value) { ?>
                             <!--Grid column-->
-                        <div class="col-lg-3 mb-4">
+                        <div class="col-lg-4 mb-4">
                             <!--Featured image-->
                             <div class="view overlay z-depth-1">
-                                <a href="newdetail.html"><img src="images/<?php echo $value['image'] ?>" class="img-fluid" alt="News" style="height:290px; width: 100%;"></a>
+                                <a href="newdetail.php?id=<?php echo $value['id']; ?>"><img src="admin/images/<?php echo $value['image'] ?>" class="img-fluid" alt="News" style="height:290px; width: 100%;"></a>
                                
                             </div>
                         </div>
@@ -116,7 +177,7 @@ $result = $stmt->fetchAll();
 
                             <h6 class="mb-3 dark-grey-text mt-0">
                                 <strong>
-                                    <a href="new.html"><b><p class="dark-grey-text"><?php echo $value['title']; ?></p></b></a>
+                                    <a href="newdetail.php?id=<?php echo $value['id']; ?>"><b><p class="dark-grey-text"><i class="far fa-newspaper pr-2"></i><?php echo $value['title']; ?></p></b></a>
                                 </strong>
                             </h6>
                             <!--Grid row-->
@@ -147,7 +208,7 @@ $result = $stmt->fetchAll();
                             </p>
 
                             <!--Deep-orange-->
-                            <a href="newdetail.html" class="btn btn-danger btn-rounded btn-sm waves-effect waves-light">Read more</a>
+                            <a href="newdetail.php?id=<?php echo $value['id']; ?>" class="btn btn-danger btn-rounded btn-sm waves-effect waves-light">Read more</a>
                         </div>
                         <!--Grid column-->
                         <?php }
@@ -158,34 +219,38 @@ $result = $stmt->fetchAll();
                         <hr class="mb-5">
 
                 <!-- Pagination -->
-                <div class="row">
-                    <!--Grid column-->
-                    <div class="col-lg-12 col-md-12 mb-12">
+            <div class="row">
+                <!--Grid column-->
+                <div class="col-lg-12 col-md-12 mb-12">
 
-                        <nav>
-                          <ul class="pagination pg-dark d-flex justify-content-center">
-                            <li class="page-item">
-                              <a class="page-link" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                                <span class="sr-only">Previous</span>
-                              </a>
-                            </li>
-                            <li class="page-item active"><a class="page-link">1</a></li>
-                            <li class="page-item"><a class="page-link">2</a></li>
-                            <li class="page-item"><a class="page-link">3</a></li>
-                            <li class="page-item"><a class="page-link">4</a></li>
-                            <li class="page-item"><a class="page-link">5</a></li>
-                            <li class="page-item">
-                              <a class="page-link" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                                <span class="sr-only">Next</span>
-                              </a>
-                            </li>
-                          </ul>
-                        </nav>
+                    <nav>
+                      <ul class="pagination pg-dark d-flex justify-content-center">
+                        <li class="page-item active"><a href="?pageno=1" class="page-link">First</a></li>
+                        <li class="page-item <?php if($pageno <= 1) { echo "disabled"; } ?>">
+                          <a href="<?php if($pageno <= 1) { echo '#';} else { echo "?pageno=".($pageno - 1); } ?>" class="page-link" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                            <span class="sr-only">Previous</span>
+                          </a>
+                        </li>
+                        <li class="page-item <?php if($pageno <= 1) { echo "disabled"; } ?>">
+                          <a href="?pageno=<?php echo ($pageno-1); ?>" class="page-link"><?php echo ($pageno - 1); ?></a>
+                        </li>
+                        <li class="page-item active"><a class="page-link"><?php echo $pageno; ?></a></li>
+                        <li class="page-item <?php if($pageno >= $total_pages){echo "disabled"; } ?>">
+                          <a href="?pageno=<?php echo $pageno+1; ?>" class="page-link"><?php echo ($pageno + 1); ?></a>
+                        </li>
+                        <li class="page-item <?php if($pageno >= $total_pages){ echo "disabled"; } ?>">
+                          <a href="<?php if($pageno >= $total_pages) { echo '#';} else { echo "?pageno=".($pageno + 1); } ?>" class="page-link" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                            <span class="sr-only">Next</span>
+                          </a>
+                        </li>
+                        <li class="page-item active"><a href="?pageno=<?php echo $total_pages; ?>" class="page-link">Last</a></li>
+                      </ul>
+                    </nav>
 
-                    </div>
-                    <!--Grid column-->
+                </div>
+                <!--Grid column-->
 
                 </div>
                 <!--End Pagination -->
@@ -204,65 +269,4 @@ $result = $stmt->fetchAll();
         <!--End Main Container-->
     </main>
     <!--Main layout-->
-	<section id="footer">
-		<div class="container-fluid">
-			<div class="footer">
-				<p> &copy; copyright Tokyo Kachin Baptist Church</p>
-<!-- 				<address>TKBC<br>
-					New Life Bld; 4F, Nishi-Waseda 3-31-11<br>
-					 Shinjuku-ku,Tokyo
-					 169-0051 Japan
-				</address> -->
-			</div>
-		</div>
-	</section>
-
-	
-
-
-<script src="dist/aos.js"></script>
-<script>
-  AOS.init({
-    easing: 'ease-in-out-sine'
-  });
-</script>
-
-<!-- script -->
-<script>
-//Get the button
-var mybutton = document.querySelector("#myBtn");
-// When the user scrolls down 50px from the top of the document, resize the header's font size
-window.onscroll = function() {scrollFunction()};
-
-function scrollFunction() {
-  if (document.body.scrollTop > 50 || document.documentElement.scrollTop > 50) {
-    // document.getElementById("header").style.fontSize = "17px";
-    // document.getElementById("header").style.paddingTop = "0px";
-    // document.getElementById("header").style.paddingBottom = "0px";
-    // document.getElementById("header").style.transition = "0.5s";
-    
-    // document.getElementById("header").style.fontSize = "20px";
-  } else {
-    // document.getElementById("header").style.fontSize = "17px";
-    // document.getElementById("header").style.paddingTop = "15px";
-    // document.getElementById("header").style.paddingBottom = "15px";
-  }
-
-  if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
-    mybutton.style.opacity = "100%";
-
-  } else {
-    mybutton.style.opacity = "0%";
-  }
-
-
-}
-
-// When the user clicks on the button, scroll to the top of the document
-function topFunction() {
-  document.body.scrollTop = 0;
-  document.documentElement.scrollTop = 0;
-}
-</script>
-</body>
-</html>
+<?php include('footer.php') ?>

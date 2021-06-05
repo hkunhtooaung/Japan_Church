@@ -48,8 +48,8 @@ html {
 	margin: 0;
   	background-color: #343a40;
   	min-height: 40px;
-/*  	padding-top: 15px;
-  	padding-bottom: 15px;*/
+  	padding-top: 15px;
+  	padding-bottom: 15px;
   	text-align: center;
   	font-size: 17px; 
   	/*font-weight: bold;*/
@@ -82,14 +82,15 @@ html {
 
 }
 
-/*#header li a:hover{
-	background-color: black;
-	color: white;
-}*/
+
 #header nav img {
-	margin-left: 40px;
+	/*margin-left: 40px;*/
 	width: 50px;
 	height: 30px;
+}
+.navbar {
+	box-shadow: none !important;
+	webkit-box-shadow: none !important;
 }
 /*----------------------END HEADER------------------------*/
 
@@ -202,8 +203,8 @@ html {
 	height: 80px;
 	background-color: #343a40;
 }
-#footer p{
-	color: white;
+#footer {
+	color: #fff !important;
 	line-height: 80px;
 	text-align: center;
 	font-size: 20px;
